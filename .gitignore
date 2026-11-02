@@ -8,6 +8,12 @@ venv/
 
 # Generated output
 ip-list.json
+ip-list-*.json
 *.meta.json
 allowed.txt
 *.zone
+
+# PyInstaller
+build/
+dist/
+*.spec

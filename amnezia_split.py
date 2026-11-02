@@ -45,6 +45,8 @@ EXIT_NO_NETWORKS = 2
 EXIT_INPUT_ERROR = 3
 EXIT_FETCH_ERROR = 4
 
+__version__ = "1.0.0"
+
 # (English label as shown in the AmneziaUI, Persian explanation)
 MODE_LABELS = {
     "except": (
@@ -104,6 +106,11 @@ def default_sources(country: str) -> list[tuple[str, str]]:
     return sources
 
 
+def default_output_name() -> Path:
+    """Timestamped default output, e.g. ip-list-20261102-143005.json."""
+    return Path(f"ip-list-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json")
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="amnezia_split",
@@ -137,8 +144,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "-o",
         "--output",
         type=Path,
-        default=Path("ip-list.json"),
-        help="output JSON path (default: ip-list.json)",
+        default=None,
+        help=(
+            "output JSON path (default: ip-list-<YYYYMMDD-HHMMSS>.json "
+            "in the current directory)"
+        ),
     )
     p.add_argument(
         "--mode",
@@ -246,6 +256,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "compare the list against the official RIPE Stat registry data and "
             "print coverage statistics"
         ),
+    )
+    p.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     return p.parse_args(argv)
 
@@ -545,6 +560,7 @@ def print_instructions(output: Path, mode: str, legacy: bool, quiet: bool) -> No
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    output = args.output or default_output_name()
 
     fetched = None
     if args.input is None:
@@ -629,7 +645,7 @@ def main(argv: list[str] | None = None) -> int:
     entries = build_entries(networks, legacy=args.legacy)
 
     try:
-        args.output.write_text(
+        output.write_text(
             json.dumps(entries, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
@@ -641,7 +657,7 @@ def main(argv: list[str] | None = None) -> int:
         meta_path = None
         if fetched is not None:
             meta_path = write_meta(
-                args.output,
+                output,
                 source=fetched[0],
                 url=fetched[1],
                 from_cache=fetched[2],
@@ -668,7 +684,7 @@ def main(argv: list[str] | None = None) -> int:
         if meta_path:
             print(f"metadata   : {meta_path}")
 
-    print_instructions(args.output, args.mode, args.legacy, args.quiet)
+    print_instructions(output, args.mode, args.legacy, args.quiet)
     return EXIT_OK
 
 

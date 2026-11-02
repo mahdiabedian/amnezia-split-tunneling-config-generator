@@ -7,7 +7,7 @@
 - **خودکار (پیش‌فرض):** لیست به‌روز IPv4 ایران را دانلود می‌کند و کانفیگ می‌سازد.
 - **دستی:** یک فایل متنی از رنج‌های IPv4 (CIDR) می‌دهید و کانفیگ می‌سازد.
 
-خروجی (`ip-list.json`):
+خروجی (`ip-list-<YYYYMMDD-HHMMSS>.json`):
 
 ```json
 [
@@ -25,8 +25,15 @@
 python3 amnezia_split.py
 ```
 
-خروجی: `ip-list.json` در پوشهٔ جاری، به‌همراه `ip-list.json.meta.json`
-(منبع، زمان ساخت، تعداد رنج‌ها و SHA256).
+خروجی: `ip-list-20261102-143005.json` در پوشهٔ جاری، به‌همراه
+`ip-list-20261102-143005.json.meta.json` (منبع، زمان ساخت، تعداد رنج‌ها و SHA256).
+نام فایل با timestamp ساخته می‌شود تا اجراهای قبلی بازنویسی نشوند.
+
+اگر نام ثابت می‌خواهید:
+
+```bash
+python3 amnezia_split.py -o ip-list.json
+```
 
 منبع پیش‌فرض:
 
@@ -174,7 +181,7 @@ systemctl --user enable --now amnezia-split.timer
 | گزینه | توضیح |
 | --- | --- |
 | `INPUT` | فایل ورودی؛ اگر حذف شود، لیست خودکار دانلود می‌شود |
-| `-o, --output PATH` | مسیر فایل خروجی (پیش‌فرض `ip-list.json`) |
+| `-o, --output PATH` | مسیر خروجی (پیش‌فرض `ip-list-<YYYYMMDD-HHMMSS>.json`) |
 | `--mode {except,forward}` | حالت مسیردهی؛ در راهنمای چاپ‌شده و هشدارها اثر دارد |
 | `--legacy` | فرمت سازگار با نسخه‌های باگ‌دار 5.0.0.x |
 | `--collapse` | ادغام رنج‌های مجاور/هم‌پوشان |
@@ -210,6 +217,47 @@ systemctl --user enable --now amnezia-split.timer
 - **حجم لیست:** لیست‌های خیلی بزرگ می‌توانند رابط کاربری Amnezia را کند کنند.
   با `--collapse` تعداد entryها را کم کنید.
 - **دقت داده:** لیست بر پایهٔ داده‌های RIPE است و تضمین کامل geolocation نیست.
+
+## باینری (بدون نیاز به Python)
+
+از صفحهٔ **Releases** آخرین باینری سیستم‌عامل خود را دانلود کنید:
+
+| سیستم‌عامل | فایل |
+| --- | --- |
+| Linux x86_64 | `amnezia-split-linux-x86_64` |
+| Windows x86_64 | `amnezia-split-windows-x86_64.exe` |
+| macOS Intel | `amnezia-split-macos-x86_64` |
+| macOS Apple Silicon | `amnezia-split-macos-arm64` |
+
+```bash
+chmod +x amnezia-split-linux-x86_64
+./amnezia-split-linux-x86_64
+```
+
+ساخت محلی:
+
+```bash
+make build      # خروجی: dist/amnezia-split
+```
+
+انتشار نسخهٔ جدید:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+workflow `release` به‌صورت خودکار باینری هر چهار پلتفرم را می‌سازد و به
+Releases اضافه می‌کند.
+
+## دستورهای Make
+
+| دستور | کار |
+| --- | --- |
+| `make run` | اجرای ساده و ساخت فایل timestamp‌دار |
+| `make test` | اجرای تست‌ها |
+| `make build` | ساخت باینری برای سیستم فعلی |
+| `make clean` | پاک کردن خروجی‌های build |
 
 ## تست
 

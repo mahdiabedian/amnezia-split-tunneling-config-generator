@@ -106,6 +106,19 @@ class AmneziaSplitTest(unittest.TestCase):
         result = run(["in.txt", "-o", "out.json", "-q"], self.dir)
         self.assertEqual(result.stdout.strip(), "out.json")
 
+    def test_default_output_has_timestamp(self):
+        self.write("in.txt", "1.2.3.0/24\n")
+        result = run(["in.txt", "-q"], self.dir)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        name = result.stdout.strip()
+        self.assertRegex(name, r"^ip-list-\d{8}-\d{6}\.json$")
+        self.assertTrue((self.dir / name).is_file())
+
+    def test_version(self):
+        result = run(["--version"], self.dir)
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("amnezia_split", result.stdout)
+
     # ------------------------------------------------------------------ #
     # automatic download
     # ------------------------------------------------------------------ #

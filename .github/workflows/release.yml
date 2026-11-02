@@ -1,0 +1,74 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            artifact: amnezia-split-linux-x86_64
+          - os: windows-latest
+            artifact: amnezia-split-windows-x86_64.exe
+          - os: macos-13
+            artifact: amnezia-split-macos-x86_64
+          - os: macos-14
+            artifact: amnezia-split-macos-arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pyinstaller
+
+      - name: Build binary
+        run: python -m PyInstaller --onefile --name amnezia-split amnezia_split.py
+
+      - name: Rename artifact
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            mv dist/amnezia-split.exe "dist/${{ matrix.artifact }}"
+          else
+            mv dist/amnezia-split "dist/${{ matrix.artifact }}"
+          fi
+
+      - name: Smoke test
+        shell: bash
+        run: |
+          "dist/${{ matrix.artifact }}" --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
