@@ -19,9 +19,9 @@ jobs:
             artifact: amnezia-split-linux-x86_64
           - os: windows-latest
             artifact: amnezia-split-windows-x86_64.exe
-          - os: macos-13
+          - os: macos-15-intel
             artifact: amnezia-split-macos-x86_64
-          - os: macos-14
+          - os: macos-15
             artifact: amnezia-split-macos-arm64
 
     steps:
