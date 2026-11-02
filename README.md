@@ -218,3 +218,7 @@ python3 -m unittest discover -s tests -v
 ```
 
 نیازی به کتابخانهٔ بیرونی نیست؛ فقط Python 3.9+.
+
+## لایسنس
+
+[MIT](LICENSE) © 2026 Mahdi Abedian
