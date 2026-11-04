@@ -5,12 +5,17 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -19,10 +24,8 @@ jobs:
             artifact: amnezia-split-linux-x86_64
           - os: windows-latest
             artifact: amnezia-split-windows-x86_64.exe
-          - os: macos-15-intel
-            artifact: amnezia-split-macos-x86_64
-          - os: macos-15
-            artifact: amnezia-split-macos-arm64
+          - os: macos-latest
+            artifact: amnezia-split-macos-universal
 
     steps:
       - uses: actions/checkout@v4
@@ -35,13 +38,24 @@ jobs:
         run: python -m pip install --upgrade pyinstaller certifi
 
       - name: Build binary
-        run: python -m PyInstaller --onefile --name amnezia-split amnezia_split.py
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            python -m PyInstaller --onefile --target-arch universal2 --name amnezia-split amnezia_split.py
+          else
+            python -m PyInstaller --onefile --name amnezia-split amnezia_split.py
+          fi
 
       - name: Rename artifact
         shell: bash
         run: |
           if [ "${{ runner.os }}" = "Windows" ]; then
             mv dist/amnezia-split.exe "dist/${{ matrix.artifact }}"
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            mv dist/amnezia-split "dist/${{ matrix.artifact }}"
+            # Provide compatibility copies for Apple Silicon and Intel users
+            cp "dist/${{ matrix.artifact }}" dist/amnezia-split-macos-arm64
+            cp "dist/${{ matrix.artifact }}" dist/amnezia-split-macos-x86_64
           else
             mv dist/amnezia-split "dist/${{ matrix.artifact }}"
           fi
@@ -50,11 +64,14 @@ jobs:
         shell: bash
         run: |
           "dist/${{ matrix.artifact }}" --version
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            file "dist/${{ matrix.artifact }}"
+          fi
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}
+          path: dist/*
           if-no-files-found: error
 
   release:

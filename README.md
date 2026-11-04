@@ -226,8 +226,7 @@ systemctl --user enable --now amnezia-split.timer
 | --- | --- |
 | Linux x86_64 | `amnezia-split-linux-x86_64` |
 | Windows x86_64 | `amnezia-split-windows-x86_64.exe` |
-| macOS Intel | `amnezia-split-macos-x86_64` |
-| macOS Apple Silicon | `amnezia-split-macos-arm64` |
+| macOS (Universal - Intel و Apple Silicon) | `amnezia-split-macos-universal` (یا نسخه‌های مجزای `arm64` / `x86_64`) |
 
 ```bash
 chmod +x amnezia-split-linux-x86_64
