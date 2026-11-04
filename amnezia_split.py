@@ -33,6 +33,7 @@ import hashlib
 import ipaddress
 import json
 import os
+import ssl
 import sys
 import time
 import urllib.error
@@ -338,9 +339,22 @@ def read_cache(path: Path, max_age: int) -> str | None:
         return None
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """Use certifi's CA bundle when available (standalone binaries often
+    cannot find the system CA store); otherwise the system default."""
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
 def download(url: str, timeout: float) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with urllib.request.urlopen(
+        request, timeout=timeout, context=_ssl_context()
+    ) as response:
         charset = response.headers.get_content_charset() or "utf-8"
         return response.read().decode(charset, errors="replace")
 

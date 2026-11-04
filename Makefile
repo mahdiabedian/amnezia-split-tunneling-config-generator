@@ -13,7 +13,7 @@ test:
 
 # Standalone binary for the current platform (dist/amnezia-split).
 build:
-	$(PYTHON) -m pip install --quiet pyinstaller
+	$(PYTHON) -m pip install --quiet pyinstaller certifi
 	$(PYTHON) -m PyInstaller --onefile --name $(NAME) amnezia_split.py
 
 clean:
